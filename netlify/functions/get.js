@@ -64,11 +64,24 @@ export const handler = async (event) => {
     `
   }
 
-  if (burn && gif.burn_after !== null) {
-    if (gif.views >= gif.burn_after) {
-      await sql`UPDATE gifs SET deleted = TRUE WHERE id = ${id}`
-    }
+  if (burn) {
+  if (gif.burn_remaining === null) {
+    return { statusCode: 400, body: 'Not a burn-enabled GIF' }
   }
+
+  if (gif.burn_remaining <= 0) {
+    await sql`UPDATE gifs SET deleted = TRUE WHERE id = ${id}`
+    return { statusCode: 410, body: 'Burned' }
+  }
+
+  await sql`
+    UPDATE gifs SET burn_remaining = burn_remaining - 1 WHERE id = ${id}
+  `
+
+  if (gif.burn_remaining - 1 <= 0) {
+    await sql`UPDATE gifs SET deleted = TRUE WHERE id = ${id}`
+  }
+}
 
   return {
     statusCode: 200,
