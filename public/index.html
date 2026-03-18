@@ -14,32 +14,38 @@
   <p id="out"></p>
 
   <script>
-    const form = document.getElementById('form')
-    const out = document.getElementById('out')
+const form = document.getElementById('form')
+const out = document.getElementById('out')
 
-    form.onsubmit = async (e) => {
-      e.preventDefault()
+form.onsubmit = async (e) => {
+  e.preventDefault()
 
-      const fd = new FormData(form)
+  const fd = new FormData()
 
-      const res = await fetch('/.netlify/functions/upload', {
-        method: 'POST',
-        body: fd
-      })
+  const files = form.querySelector('input').files
 
-      const text = await res.text()
+  for (const file of files) {
+    fd.append('file', file)
+  }
 
-      try {
-        const data = JSON.parse(text)
-        out.innerHTML = `
-          <a href="${data.url}" target="_blank">View</a><br>
-          <a href="${data.burn}" target="_blank">Burn Link</a><br>
-          <a href="${data.random}" target="_blank">Random</a>
-        `
-      } catch {
-        out.textContent = text
-      }
-    }
-  </script>
+  const res = await fetch('/.netlify/functions/upload', {
+    method: 'POST',
+    body: fd
+  })
+
+  const text = await res.text()
+
+  try {
+    const data = JSON.parse(text)
+
+    out.innerHTML = `
+      Uploaded: ${data.count}<br>
+      ${data.files.map(f => `<a href="${f}" target="_blank">${f}</a>`).join('<br>')}
+    `
+  } catch {
+    out.textContent = text
+  }
+}
+</script>
 </body>
 </html>
