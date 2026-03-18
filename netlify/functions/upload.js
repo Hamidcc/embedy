@@ -42,9 +42,11 @@ export const handler = async (event) => {
 
       const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
+      const burnCount = 1 // default burn link = 1 view
+
       await sql`
-        INSERT INTO gifs (id, data, expires_at)
-        VALUES (${id}, ${fileBuffer}, ${expires})
+        INSERT INTO gifs (id, data, expires_at, burn_remaining)
+        VALUES (${id}, ${fileBuffer}, ${expires}, ${burnCount})
       `
 
       await sql`
