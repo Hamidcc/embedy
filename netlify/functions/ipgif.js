@@ -16,23 +16,21 @@ export const handler = async (event) => {
     <rect width="100%" height="100%" fill="#000"/>
     
     <text x="20" y="40" fill="#00ff00" font-size="16" font-family="monospace">
-      CONNECTION ESTABLISHED
+      ern what the sigma
     </text>
 
     <text x="20" y="80" fill="#00ff00" font-size="14" font-family="monospace">
       IP: ${ip}
     </text>
 
-    <text x="20" y="110" fill="#00ff00" font-size="14" font-family="monospace">
-      LOC: ${location}
-    </text>
+
 
     <text x="20" y="140" fill="#00ff00" font-size="12" font-family="monospace">
       UA: ${ua.slice(0, 60)}
     </text>
 
     <text x="20" y="180" fill="#ff0000" font-size="14" font-family="monospace">
-      TRACKING ACTIVE
+      This information is only client side blah blah blah
     </text>
   </svg>
   `
