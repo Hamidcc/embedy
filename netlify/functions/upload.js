@@ -20,7 +20,22 @@ export const handler = async (event) => {
   }
 
   return new Promise((resolve) => {
-    const bb = Busboy({ headers: event.headers })
+    const contentType =
+  event.headers['content-type'] ||
+  event.headers['Content-Type']
+
+if (!contentType || !contentType.includes('multipart/form-data')) {
+  return {
+    statusCode: 400,
+    body: 'Invalid upload: Content-Type must be multipart/form-data'
+  }
+}
+
+const bb = Busboy({
+  headers: {
+    'content-type': contentType
+  }
+})
 
     const files = []
 
