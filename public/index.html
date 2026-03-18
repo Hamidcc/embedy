@@ -14,23 +14,19 @@
 
   <p id="out"></p>
 
- <script>
+<script>
 const form = document.getElementById('form')
 const out = document.getElementById('out')
 
 form.onsubmit = async (e) => {
   e.preventDefault()
 
-  const singleInput = document.getElementById('single')
-  const folderInput = document.getElementById('folder')
+  const single = document.getElementById('single').files
+  const folder = document.getElementById('folder').files
 
-  let files = []
+  const files = folder.length ? folder : single
 
-  if (folderInput.files.length > 0) {
-    files = folderInput.files
-  } else if (singleInput.files.length > 0) {
-    files = singleInput.files
-  } else {
+  if (!files.length) {
     out.textContent = 'No files selected'
     return
   }
@@ -41,22 +37,20 @@ form.onsubmit = async (e) => {
     if (!file.name.toLowerCase().endsWith('.gif')) continue
 
     const fd = new FormData()
-    fd.append('file', file)
+    fd.append('file', file, file.name)
+
+    const res = await fetch('/.netlify/functions/upload', {
+      method: 'POST',
+      body: fd
+    })
+
+    const text = await res.text()
 
     try {
-      const res = await fetch('/.netlify/functions/upload', {
-        method: 'POST',
-        body: fd
-      })
-
-      const text = await res.text()
-
-      try {
-        const data = JSON.parse(text)
-        if (data.files) uploaded.push(...data.files)
-      } catch {}
-    } catch (err) {
-      console.error(err)
+      const data = JSON.parse(text)
+      if (data.files) uploaded.push(...data.files)
+    } catch {
+      console.error(text)
     }
   }
 
