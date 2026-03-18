@@ -11,36 +11,25 @@ export const handler = async (event) => {
     } catch {}
   }
 
-  const svg = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="500" height="220">
-    <rect width="100%" height="100%" fill="#000"/>
-    
-    <text x="20" y="40" fill="#00ff00" font-size="16" font-family="monospace">
-      ern what the sigma
-    </text>
+  const text = `
+IP: ${ip}
 
-    <text x="20" y="80" fill="#00ff00" font-size="14" font-family="monospace">
-      IP: ${ip}
-    </text>
+UA: ${ua.slice(0, 40)}
+TRACKING ACTIVE
+  `.trim()
 
+  const url = `https://dummyimage.com/600x300/000/00ff00&text=${encodeURIComponent(text)}`
 
-
-    <text x="20" y="140" fill="#00ff00" font-size="12" font-family="monospace">
-      UA: ${ua.slice(0, 60)}
-    </text>
-
-    <text x="20" y="180" fill="#ff0000" font-size="14" font-family="monospace">
-      This information is only client side blah blah blah
-    </text>
-  </svg>
-  `
+  const res = await fetch(url)
+  const buffer = await res.arrayBuffer()
 
   return {
     statusCode: 200,
     headers: {
-      'Content-Type': 'image/svg+xml',
+      'Content-Type': 'image/png',
       'Cache-Control': 'no-cache'
     },
-    body: svg
+    body: Buffer.from(buffer).toString('base64'),
+    isBase64Encoded: true
   }
 }
