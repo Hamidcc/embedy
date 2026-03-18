@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GIF Directory</title>
+  <style>
+    body { font-family: sans-serif; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 200px);
+      gap: 10px;
+    }
+    img {
+      width: 100%;
+      height: auto;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+<h1>GIF Directory</h1>
+<div class="grid" id="grid"></div>
+
+<script>
+const grid = document.getElementById('grid')
+
+async function load() {
+  const res = await fetch('/.netlify/functions/list')
+  const ids = await res.json()
+
+  for (const id of ids) {
+    const img = document.createElement('img')
+    img.src = `/.netlify/functions/get?id=${id}`
+    img.loading = 'lazy'
+    grid.appendChild(img)
+  }
+}
+
+load()
+</script>
+
+</body>
+</html>
