@@ -4,7 +4,6 @@
   "dependencies": {
     "@netlify/neon": "^0.1.2",
     "busboy": "^1.6.0",
-    "nanoid": "^4.0.0",
-    "canvas": "^2.11.2"
+    "nanoid": "^4.0.0"
   }
 }
