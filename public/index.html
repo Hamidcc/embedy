@@ -7,44 +7,63 @@
   <h1>Upload GIF</h1>
 
   <form id="form">
-    <input type="file" name="file" multiple webkitdirectory />
+    <input type="file" id="single" accept="image/gif" />
+<input type="file" id="folder" webkitdirectory multiple />
     <button>Upload</button>
   </form>
 
   <p id="out"></p>
 
-  <script>
+ <script>
 const form = document.getElementById('form')
 const out = document.getElementById('out')
 
 form.onsubmit = async (e) => {
   e.preventDefault()
 
-  const fd = new FormData()
+  const singleInput = document.getElementById('single')
+  const folderInput = document.getElementById('folder')
 
-  const files = form.querySelector('input').files
+  let files = []
+
+  if (folderInput.files.length > 0) {
+    files = folderInput.files
+  } else if (singleInput.files.length > 0) {
+    files = singleInput.files
+  } else {
+    out.textContent = 'No files selected'
+    return
+  }
+
+  let uploaded = []
 
   for (const file of files) {
+    if (!file.name.toLowerCase().endsWith('.gif')) continue
+
+    const fd = new FormData()
     fd.append('file', file)
+
+    try {
+      const res = await fetch('/.netlify/functions/upload', {
+        method: 'POST',
+        body: fd
+      })
+
+      const text = await res.text()
+
+      try {
+        const data = JSON.parse(text)
+        if (data.files) uploaded.push(...data.files)
+      } catch {}
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const res = await fetch('/.netlify/functions/upload', {
-    method: 'POST',
-    body: fd
-  })
-
-  const text = await res.text()
-
-  try {
-    const data = JSON.parse(text)
-
-    out.innerHTML = `
-      Uploaded: ${data.count}<br>
-      ${data.files.map(f => `<a href="${f}" target="_blank">${f}</a>`).join('<br>')}
-    `
-  } catch {
-    out.textContent = text
-  }
+  out.innerHTML = `
+    Uploaded: ${uploaded.length}<br>
+    ${uploaded.map(f => `<a href="${f}" target="_blank">${f}</a>`).join('<br>')}
+  `
 }
 </script>
 </body>
