@@ -3,13 +3,14 @@ import { nanoid } from 'nanoid'
 import Busboy from 'busboy'
 import { execSync } from 'child_process'
 import fs from 'fs'
-
+const BULK_MODE = true
 const sql = neon()
 
 export const handler = async (event) => {
   const ip = event.headers['x-forwarded-for']?.split(',')[0] || 'unknown'
   const today = new Date().toISOString().slice(0, 10)
 
+  if (!BULK_MODE) {
   const existing = await sql`
     SELECT 1 FROM uploads WHERE ip = ${ip} AND date = ${today}
   `
@@ -17,18 +18,26 @@ export const handler = async (event) => {
   if (existing.length > 0) {
     return { statusCode: 429, body: '1 upload/day limit' }
   }
+}
 
   return new Promise((resolve) => {
     const bb = Busboy({ headers: event.headers })
     let fileBuffer = null
 
     bb.on('file', (_, file) => {
-      const chunks = []
-      file.on('data', (d) => chunks.push(d))
-      file.on('end', () => {
-        fileBuffer = Buffer.concat(chunks)
-      })
-    })
+  const chunks = []
+  file.on('data', (d) => chunks.push(d))
+  file.on('end', async () => {
+    const buffer = Buffer.concat(chunks)
+
+    const id = nanoid(10)
+
+    await sql`
+      INSERT INTO gifs (id, data, expires_at)
+      VALUES (${id}, ${buffer}, ${new Date(Date.now() + 7*24*60*60*1000)})
+    `
+  })
+})
 
     bb.on('finish', async () => {
       const id = nanoid(10)
@@ -64,14 +73,16 @@ export const handler = async (event) => {
         })
       }
 
-      resolve({
-        statusCode: 200,
-        body: JSON.stringify({
-          url: `/.netlify/functions/get?id=${id}`,
-          burn: `/.netlify/functions/get?id=${id}&burn=1`,
-          random: `/.netlify/functions/random`
-        })
-      })
+      const gifs = await sql`
+  SELECT id FROM gifs ORDER BY created_at DESC LIMIT 20
+`
+
+resolve({
+  statusCode: 200,
+  body: JSON.stringify({
+    uploaded: gifs.map(g => `/.netlify/functions/get?id=${g.id}`)
+  })
+})
     })
 
     bb.end(Buffer.from(event.body, 'base64'))
