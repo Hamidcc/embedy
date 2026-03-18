@@ -1,45 +1,48 @@
-import { createCanvas } from 'canvas'
-
 export const handler = async (event) => {
-  try {
-    const ip = (event.headers['x-forwarded-for'] || '').split(',')[0] || 'unknown'
-    const ua = event.headers['user-agent'] || 'unknown'
-    const geoRaw = event.headers['x-nf-geo']
+  const ip = (event.headers['x-forwarded-for'] || '').split(',')[0] || 'unknown'
+  const ua = event.headers['user-agent'] || 'unknown'
 
-    let location = 'unknown'
-    if (geoRaw) {
-      try {
-        const geo = JSON.parse(Buffer.from(geoRaw, 'base64').toString())
-        location = `${geo.city || ''}, ${geo.subdivision?.name || ''}, ${geo.country?.name || ''}`
-      } catch {}
-    }
+  let location = 'unknown'
+  const geoRaw = event.headers['x-nf-geo']
+  if (geoRaw) {
+    try {
+      const geo = JSON.parse(Buffer.from(geoRaw, 'base64').toString())
+      location = `${geo.city || ''}, ${geo.subdivision?.name || ''}, ${geo.country?.name || ''}`
+    } catch {}
+  }
 
-    const canvas = createCanvas(500, 200)
-    const ctx = canvas.getContext('2d')
+  const svg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="500" height="220">
+    <rect width="100%" height="100%" fill="#000"/>
+    
+    <text x="20" y="40" fill="#00ff00" font-size="16" font-family="monospace">
+      CONNECTION ESTABLISHED
+    </text>
 
-    ctx.fillStyle = '#111'
-    ctx.fillRect(0, 0, 500, 200)
+    <text x="20" y="80" fill="#00ff00" font-size="14" font-family="monospace">
+      IP: ${ip}
+    </text>
 
-    ctx.fillStyle = '#0f0'
-    ctx.font = '16px monospace'
+    <text x="20" y="110" fill="#00ff00" font-size="14" font-family="monospace">
+      LOC: ${location}
+    </text>
 
-    ctx.fillText(`IP: ${ip}`, 20, 40)
-    ctx.fillText(`Location: ${location}`, 20, 80)
-    ctx.fillText(`UA: ${ua.slice(0, 50)}...`, 20, 120)
+    <text x="20" y="140" fill="#00ff00" font-size="12" font-family="monospace">
+      UA: ${ua.slice(0, 60)}
+    </text>
 
-    const buffer = canvas.toBuffer('image/png')
+    <text x="20" y="180" fill="#ff0000" font-size="14" font-family="monospace">
+      TRACKING ACTIVE
+    </text>
+  </svg>
+  `
 
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'no-cache'
-      },
-      body: buffer.toString('base64'),
-      isBase64Encoded: true
-    }
-  } catch (err) {
-    console.error(err)
-    return { statusCode: 500, body: 'error' }
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'image/svg+xml',
+      'Cache-Control': 'no-cache'
+    },
+    body: svg
   }
 }
