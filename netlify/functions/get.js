@@ -82,7 +82,7 @@ export const handler = async (event) => {
     await sql`UPDATE gifs SET deleted = TRUE WHERE id = ${id}`
   }
 }
-
+const gifBuffer = Buffer.from(gif.data)
   return {
   statusCode: 200,
   headers: {
