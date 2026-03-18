@@ -2,7 +2,7 @@
   "name": "netlify-gif-site",
   "type": "module",
   "dependencies": {
-    "@netlify/neon": "^1.0.0",
+    "@netlify/neon": "^0.1.2",
     "busboy": "^1.6.0",
     "nanoid": "^4.0.0"
   }
