@@ -1,54 +1,45 @@
 <!DOCTYPE html>
 <html>
-<head><title>GIF Upload</title></head>
+<head>
+  <title>GIF Upload</title>
+</head>
 <body>
   <h1>Upload GIF</h1>
 
   <form id="form">
-    <input type="file" id="single" accept="image/gif" multiple />
-    <input type="file" id="folder" webkitdirectory multiple />
+    <input type="file" name="file" accept="image/gif" required />
     <button>Upload</button>
   </form>
 
   <p id="out"></p>
 
-<script>
-const form = document.getElementById('form')
-const out = document.getElementById('out')
+  <script>
+    const form = document.getElementById('form')
+    const out = document.getElementById('out')
 
-form.onsubmit = async (e) => {
-  e.preventDefault()
+    form.onsubmit = async (e) => {
+      e.preventDefault()
 
-  const single = Array.from(document.getElementById('single').files || [])
-  const folder = Array.from(document.getElementById('folder').files || [])
-  const files = (folder.length ? folder : single).filter(f => f.name.toLowerCase().endsWith('.gif'))
+      const fd = new FormData(form)
 
-  if (!files.length) {
-    out.textContent = 'No GIF files selected'
-    return
-  }
+      const res = await fetch('/.netlify/functions/upload', {
+        method: 'POST',
+        body: fd
+      })
 
-  const fd = new FormData()
-  for (const file of files) fd.append('file', file, file.name)
+      const text = await res.text()
 
-  // If your site is same-origin, this is fine. If cross-origin, use full URL and ensure CORS enabled server-side.
-  const res = await fetch('/.netlify/functions/upload', {
-    method: 'POST',
-    body: fd,
-    // do NOT set Content-Type manually — the browser will add the correct multipart boundary
-    // credentials: 'same-origin' // uncomment if you need cookies auth
-  })
-
-  const text = await res.text()
-  try {
-    const data = JSON.parse(text)
-    const uploaded = data.files || []
-    out.innerHTML = `Uploaded: ${uploaded.length}<br>${uploaded.map(f => `<a href="${f}" target="_blank">${f}</a>`).join('<br>')}`
-  } catch (err) {
-    console.error('Server response (not JSON):', text)
-    out.textContent = 'Upload failed — check console for server response'
-  }
-}
-</script>
+      try {
+        const data = JSON.parse(text)
+        out.innerHTML = `
+          <a href="${data.url}" target="_blank">View</a><br>
+          <a href="${data.burn}" target="_blank">Burn Link</a><br>
+          <a href="${data.random}" target="_blank">Random</a>
+        `
+      } catch {
+        out.textContent = text
+      }
+    }
+  </script>
 </body>
 </html>
