@@ -84,12 +84,13 @@ export const handler = async (event) => {
 }
 
   return {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'image/gif',
-      'Cache-Control': 'no-store'
-    },
-    body: gif.data.toString('base64'),
-    isBase64Encoded: true
-  }
+  statusCode: 200,
+  headers: {
+    'Content-Type': 'image/gif',
+    'Cache-Control': 'public, max-age=31536000, immutable',
+    'Content-Disposition': 'inline',
+  },
+  body: gifBuffer.toString('base64'),
+  isBase64Encoded: true
+}
 }
